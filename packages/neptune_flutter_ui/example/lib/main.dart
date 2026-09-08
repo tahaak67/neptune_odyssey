@@ -678,6 +678,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       children: [
                         NeptuneTabs(tabs: const ['Overview', 'Activity', 'Cards'], index: _tab, onChanged: (v) => setState(() => _tab = v)),
                         const SizedBox(height: 12),
+                        // The same strip in fill mode: two tabs dividing the
+                        // width, divider spanning it end to end.
+                        NeptuneTabs(tabs: const ['Devices', 'Sign-ins'], index: _tab.clamp(0, 1), width: NeptuneTabsWidth.fill, onChanged: (v) => setState(() => _tab = v)),
+                        const SizedBox(height: 12),
                         NeptuneBreadcrumbs(crumbs: [NeptuneCrumb('Home', onTap: () {}), NeptuneCrumb('Accounts', onTap: () {}), const NeptuneCrumb('Everyday')]),
                         const SizedBox(height: 12),
                         NeptunePagination(page: _page, pageCount: 6, onChanged: (v) => setState(() => _page = v)),

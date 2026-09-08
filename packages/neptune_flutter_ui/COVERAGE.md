@@ -2,6 +2,14 @@
 
 Neptune Odyssey ships **89 web components**. The Flutter package gives you:
 
+1. **Tab width control (2.22.0).** `NeptuneTabs.width` takes
+   `NeptuneTabsWidth.hug` (default — labels hug their own width at the start
+   edge, strip scrolls) or `.fill` (tabs divide the available width, divider
+   spans it end to end, over-long labels ellipsize). Hosts could not do this
+   from the outside: the hugging strip's horizontal `SingleChildScrollView`
+   hands its row an unbounded width, so no external constraint reaches the
+   tabs. Honest scope: Flutter only — the web `<npt-tabs>` has no equivalent
+   attribute yet, so this is a Flutter-ahead capability, not parity.
 1. **Host icon sets + a host FAB (2.15.0).** White-label chrome no longer means
    Material glyphs: `NeptuneDockItem`, `NeptuneQuickAction` and
    `NeptuneAccountTile` each take an optional `iconWidget` next to `icon`, so a

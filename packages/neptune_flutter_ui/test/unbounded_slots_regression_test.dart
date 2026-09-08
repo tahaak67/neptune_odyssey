@@ -46,6 +46,22 @@ void main() {
     expect(t.takeException(), isNull);
   });
 
+  testWidgets('fill tabs in an unbounded slot fall back to hugging', (t) async {
+    // NeptuneTabsWidth.fill puts every tab in an Expanded. Asked for inside a
+    // slot that never bounds the width, that is the silent-blank shape — the
+    // strip must shrink-wrap and scroll instead.
+    await t.pumpWidget(host(Row(children: [
+      NeptuneTabs(
+        tabs: const ['الأجهزة', 'محاولات الدخول'],
+        index: 0,
+        width: NeptuneTabsWidth.fill,
+        onChanged: (_) {},
+      ),
+    ])));
+    expect(t.takeException(), isNull);
+    expect(find.text('الأجهزة'), findsOneWidget);
+  });
+
   testWidgets('full profile column in section', (t) async {
     await t.pumpWidget(host(NeptuneSection(
       title: 'الأمان',

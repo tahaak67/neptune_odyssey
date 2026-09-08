@@ -1,3 +1,8 @@
+## 2.22.0
+
+- **`NeptuneTabs.width`** (`NeptuneTabsWidth.hug` | `.fill`): the tabs can now share the available width instead of hugging their labels at the start edge. A host could not do this from the outside at any price — the strip wraps its `Row` in a horizontal `SingleChildScrollView`, which hands that row an UNBOUNDED width, so `SizedBox(width: double.infinity)`, `Expanded` and `CrossAxisAlignment.stretch` all stop at the viewport and the divider kept ending with the last label. `fill` drops the scroll view and puts each tab in an `Expanded`; labels wider than their share ellipsize. Default is `hug`, so every existing call site is unchanged. Flutter only for now — the web `<npt-tabs>` keeps its current single behaviour.
+- `fill` self-adapts in unbounded-width slots (falls back to the hugging strip) rather than blanking the subtree, the rulebook §4 rule `NeptuneSegmented` already follows; covered in `unbounded_slots_regression_test.dart`.
+
 ## 2.21.1
 
 - **`NeptuneCardArt`: removed the tiled arc motif from the card face.** At full strength on a compact 1.586-ratio card, the repeating micro-pattern read as busy/cheap rather than premium. Checked against the category (Mercury, Chase, Monzo, N26, Chime, Airwallex, Brex, PayPal, Revolut Business): every one uses a clean flat/gradient card face with zero repeating texture. The brand gradient + typography now carry the identity alone, matching every reference.

@@ -9,11 +9,29 @@ import 'package:flutter/material.dart';
 
 import '../theme/extensions.dart';
 
+/// How a [NeptuneTabs] strip claims horizontal space.
+enum NeptuneTabsWidth {
+  /// Each tab is as wide as its own label, the strip sits at the start edge,
+  /// and it scrolls horizontally once the labels outrun the width. The default,
+  /// and the right choice for a long or open-ended set of tabs.
+  hug,
+
+  /// The tabs divide the available width equally and the strip — divider
+  /// included — spans it end to end. For a short, fixed set (two or three)
+  /// where a start-hugging strip leaves the rest of the width empty.
+  ///
+  /// There is no horizontal scroll in this mode, so labels that do not fit
+  /// their share ellipsize. In a slot that does NOT bound the width the strip
+  /// falls back to [hug] rather than blanking (rulebook §4).
+  fill,
+}
+
 /// A horizontal strip of tab labels with an animated pill/underline indicator
 /// beneath the active one (web `<npt-tabs>`). The active label is
 /// primary-coloured; inactive labels use [ColorScheme.onSurfaceVariant]. Each
-/// tab is at least 48dp tall, and the row scrolls horizontally when the labels
-/// overflow. Theme-only, RTL-safe.
+/// tab is at least 48dp tall. [width] decides whether the tabs hug their labels
+/// and scroll ([NeptuneTabsWidth.hug], the default) or share the available
+/// width ([NeptuneTabsWidth.fill]). Theme-only, RTL-safe.
 class NeptuneTabs extends StatelessWidget {
   /// The ordered tab labels.
   final List<String> tabs;
@@ -24,31 +42,69 @@ class NeptuneTabs extends StatelessWidget {
   /// Called with the tapped tab's index. When null the tabs are non-interactive.
   final ValueChanged<int>? onChanged;
 
+  /// How the strip claims horizontal space. Defaults to
+  /// [NeptuneTabsWidth.hug] — the scrolling, start-aligned strip.
+  final NeptuneTabsWidth width;
+
   const NeptuneTabs({
     super.key,
     required this.tabs,
     required this.index,
     this.onChanged,
+    this.width = NeptuneTabsWidth.hug,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (width == NeptuneTabsWidth.hug) {
+      // A horizontal scroll view hands its child an UNBOUNDED width, which is
+      // exactly why a `fill` strip cannot be had by wrapping this one from the
+      // outside: no SizedBox, Expanded or stretch ever reaches the row inside.
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: _strip(context, stretch: false),
+      );
+    }
+    // Equal-width tabs when the parent bounds our width; the hugging strip in
+    // unbounded slots — flex children in unbounded width silently blank the
+    // subtree (rulebook §4, same self-adaptation as NeptuneSegmented).
+    return LayoutBuilder(
+      builder: (context, constraints) => constraints.hasBoundedWidth
+          ? _strip(context, stretch: true)
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: _strip(context, stretch: false),
+            ),
+    );
+  }
+
+  Widget _strip(BuildContext context, {required bool stretch}) {
     final scheme = Theme.of(context).colorScheme;
     final shape = Theme.of(context).extension<NptShape>()!;
     final text = Theme.of(context).textTheme;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: BorderDirectional(
-            bottom: BorderSide(color: scheme.outlineVariant),
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: BorderDirectional(
+          bottom: BorderSide(color: scheme.outlineVariant),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < tabs.length; i++)
+      ),
+      child: Row(
+        mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          for (var i = 0; i < tabs.length; i++)
+            if (stretch)
+              Expanded(
+                child: _Tab(
+                  label: tabs[i],
+                  selected: i == index,
+                  onTap: onChanged == null ? null : () => onChanged!(i),
+                  scheme: scheme,
+                  shape: shape,
+                  text: text,
+                ),
+              )
+            else
               _Tab(
                 label: tabs[i],
                 selected: i == index,
@@ -57,8 +113,7 @@ class NeptuneTabs extends StatelessWidget {
                 shape: shape,
                 text: text,
               ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -107,6 +162,11 @@ class _Tab extends StatelessWidget {
                   child: Text(
                     label,
                     style: text.titleSmall?.copyWith(color: fg),
+                    textAlign: TextAlign.center,
+                    // No-op while the width is unbounded (hug); the ellipsis is
+                    // what a fill tab does with a label wider than its share.
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
